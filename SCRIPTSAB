@@ -1,0 +1,313 @@
+--[[ 
+Zeca Scripter - TP Base ULTIMATE + ESP + SATURAÇÃO MÉDIA + FOV + Otimizar (Roblox padrão)
+Saturação agora no MEIO: nem forte nem fraca!
+]]
+
+local player = game.Players.LocalPlayer
+local guiName = "ZecaScripterTP_Ultimate"
+local playerGui = player:FindFirstChild("PlayerGui") or player:WaitForChild("PlayerGui", 3)
+
+pcall(function()
+    playerGui[guiName]:Destroy()
+end)
+
+local gui = Instance.new("ScreenGui")
+gui.Name = guiName
+gui.Parent = playerGui
+gui.ZIndexBehavior = Enum.ZIndexBehavior.Global
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 210, 0, 315)
+frame.Position = UDim2.new(0.70, 0, 0.55, 0)
+frame.BackgroundColor3 = Color3.fromRGB(18,18,18)
+frame.BorderColor3 = Color3.fromRGB(245,30,45)
+frame.BorderSizePixel = 2
+frame.Active = true
+frame.Draggable = true
+frame.Parent = gui
+
+local title = Instance.new("TextLabel", frame)
+title.Text = "Zeca Scripter - TP+ESP"
+title.Size = UDim2.new(1,0,0,28)
+title.BackgroundColor3 = Color3.fromRGB(65,0,20)
+title.TextColor3 = Color3.fromRGB(245,30,45)
+title.Font = Enum.Font.GothamBlack
+title.TextSize = 18
+
+-- VARS
+local savedPos = nil
+local espEnabled = false
+local fovEnabled = false
+local satEnabled = false
+local otimizaEnabled = false
+local defaultFov = workspace.CurrentCamera.FieldOfView
+
+local otimizaBackup = {}
+
+---------------------------------------------------------
+-- BOTÕES E UI
+---------------------------------------------------------
+local tpBtn = Instance.new("TextButton", frame)
+tpBtn.Text = "TP para Base"
+tpBtn.Position = UDim2.new(0.07,0,0.15,0)
+tpBtn.Size = UDim2.new(0.86,0,0,32)
+tpBtn.BackgroundColor3 = Color3.fromRGB(245,30,45)
+tpBtn.TextColor3 = Color3.new(1,1,1)
+tpBtn.Font = Enum.Font.GothamBold
+tpBtn.TextSize = 16
+
+local saveBtn = Instance.new("TextButton", frame)
+saveBtn.Text = "Salvar Base"
+saveBtn.Position = UDim2.new(0.07,0,0.27,0)
+saveBtn.Size = UDim2.new(0.86,0,0,32)
+saveBtn.BackgroundColor3 = Color3.fromRGB(245,30,45)
+saveBtn.TextColor3 = Color3.new(1,1,1)
+saveBtn.Font = Enum.Font.GothamBold
+saveBtn.TextSize = 16
+
+local espBtn = Instance.new("TextButton", frame)
+espBtn.Text = "ESP: OFF"
+espBtn.Position = UDim2.new(0.07,0,0.39,0)
+espBtn.Size = UDim2.new(0.86,0,0,32)
+espBtn.BackgroundColor3 = Color3.fromRGB(65,0,20)
+espBtn.TextColor3 = Color3.fromRGB(255,80,100)
+espBtn.Font = Enum.Font.GothamBold
+espBtn.TextSize = 16
+
+local fovBtn = Instance.new("TextButton", frame)
+fovBtn.Text = "FOV: OFF"
+fovBtn.Position = UDim2.new(0.07,0,0.51,0)
+fovBtn.Size = UDim2.new(0.86,0,0,32)
+fovBtn.BackgroundColor3 = Color3.fromRGB(100,90,255)
+fovBtn.TextColor3 = Color3.new(1,1,1)
+fovBtn.Font = Enum.Font.GothamBold
+fovBtn.TextSize = 15
+
+local satBtn = Instance.new("TextButton", frame)
+satBtn.Text = "Saturação: OFF"
+satBtn.Position = UDim2.new(0.07,0,0.63,0)
+satBtn.Size = UDim2.new(0.86,0,0,32)
+satBtn.BackgroundColor3 = Color3.fromRGB(255,143,34)
+satBtn.TextColor3 = Color3.new(1,1,1)
+satBtn.Font = Enum.Font.GothamBold
+satBtn.TextSize = 15
+
+local optBtn = Instance.new("TextButton", frame)
+optBtn.Text = "Otimizar: OFF"
+optBtn.Position = UDim2.new(0.07,0,0.75,0)
+optBtn.Size = UDim2.new(0.86,0,0,32)
+optBtn.BackgroundColor3 = Color3.fromRGB(0,180,80)
+optBtn.TextColor3 = Color3.new(1,1,1)
+optBtn.Font = Enum.Font.GothamBold
+optBtn.TextSize = 15
+
+local msg = Instance.new("TextLabel", frame)
+msg.Text = ""
+msg.Size = UDim2.new(1,-20,0,16)
+msg.Position = UDim2.new(0,10,1,-38)
+msg.BackgroundTransparency = 1
+msg.TextColor3 = Color3.fromRGB(245,30,45)
+msg.Font = Enum.Font.GothamBold
+msg.TextSize = 12
+
+local cred = Instance.new("TextLabel", frame)
+cred.Text = "by Zeca Scripter"
+cred.Size = UDim2.new(1,0,0,12)
+cred.Position = UDim2.new(0,0,1,-18)
+cred.BackgroundTransparency = 1
+cred.TextColor3 = Color3.fromRGB(90,20,22)
+cred.Font = Enum.Font.Code
+cred.TextSize = 10
+
+---------------------------------------------------------
+-- 🔧 FUNÇÃO ESP
+---------------------------------------------------------
+local function applyESP(state)
+    for _, plr in pairs(game.Players:GetPlayers()) do
+        if plr ~= player then
+            local char = plr.Character
+            if char and char:FindFirstChild("HumanoidRootPart") then
+                if state then
+                    if not char:FindFirstChild("ZecaESP") then
+                        local esp = Instance.new("BillboardGui", char)
+                        esp.Name = "ZecaESP"
+                        esp.Size = UDim2.new(0,100,0,30)
+                        esp.Adornee = char.HumanoidRootPart
+                        esp.AlwaysOnTop = true
+
+                        local txt = Instance.new("TextLabel", esp)
+                        txt.Size = UDim2.new(1,0,1,0)
+                        txt.BackgroundTransparency = 1
+                        txt.Text = plr.Name
+                        txt.TextColor3 = Color3.fromRGB(255, 60, 80)
+                        txt.Font = Enum.Font.GothamBold
+                        txt.TextSize = 14
+                    end
+                else
+                    if char:FindFirstChild("ZecaESP") then
+                        char.ZecaESP:Destroy()
+                    end
+                end
+            end
+        end
+    end
+end
+
+---------------------------------------------------------
+-- 🔆 SATURAÇÃO (ColorCorrectionEffect) - MEIO termo (+0.8)
+---------------------------------------------------------
+local colorEffect
+local function ativarSaturacao()
+    local Lighting = game:GetService("Lighting")
+    if not colorEffect then
+        colorEffect = Instance.new("ColorCorrectionEffect")
+        colorEffect.Name = "ZecaSaturacao"
+        colorEffect.Saturation = 0.8  -- MEIO termo: mais colorido que normal, mas não exagerado
+        colorEffect.Parent = Lighting
+    else
+        colorEffect.Saturation = 0.8
+        colorEffect.Enabled = true
+    end
+end
+
+local function desativarSaturacao()
+    if colorEffect then
+        colorEffect.Enabled = false
+    end
+end
+
+---------------------------------------------------------
+-- 🎯 FOV
+---------------------------------------------------------
+local function ativarFOV()
+    local cam = workspace.CurrentCamera
+    cam.FieldOfView = 90
+end
+
+local function desativarFOV()
+    local cam = workspace.CurrentCamera
+    cam.FieldOfView = defaultFov
+end
+
+---------------------------------------------------------
+-- 💻 OTIMIZAR ROBLOX (otimização e reversão completa)
+---------------------------------------------------------
+local function otimizarAtivar()
+    otimizaBackup = {}
+    for _, v in ipairs(workspace:GetDescendants()) do
+        if v:IsA("ParticleEmitter") or v:IsA("Trail") then
+            otimizaBackup[v] = v.Enabled
+            v.Enabled = false
+        elseif v:IsA("PointLight") or v:IsA("SpotLight") or v:IsA("SurfaceLight") then
+            otimizaBackup[v] = v.Enabled
+            v.Enabled = false
+        end
+    end
+
+    for _, v in ipairs(workspace:GetDescendants()) do
+        if v:IsA("Explosion") then
+            v:Destroy()
+        end
+    end
+
+    local l = game.Lighting
+    for _,effect in ipairs({"BlurEffect","SunRaysEffect","BloomEffect","DepthOfFieldEffect","ColorCorrectionEffect"}) do
+        for _,inst in ipairs(l:GetChildren()) do
+            if inst.ClassName == effect and inst.Name ~= "ZecaSaturacao" then
+                inst:Destroy()
+            end
+        end
+    end
+    l.Brightness = 1
+    l.FogEnd = 1e5
+    l.TimeOfDay = "14:00:00"
+    l.OutdoorAmbient = Color3.fromRGB(64,64,64)
+
+    local t = workspace:FindFirstChildOfClass("Terrain")
+    if t then t.Decorations = false end
+end
+
+local function otimizarDesativar()
+    for obj,valor in pairs(otimizaBackup) do
+        if obj and obj.Parent then
+            obj.Enabled = valor
+        end
+    end
+    otimizaBackup = {}
+
+    local t = workspace:FindFirstChildOfClass("Terrain")
+    if t then t.Decorations = true end
+end
+
+---------------------------------------------------------
+-- BOTÕES -----------------------------------------------
+espBtn.MouseButton1Click:Connect(function()
+    espEnabled = not espEnabled
+    espBtn.Text = espEnabled and "ESP: ON" or "ESP: OFF"
+    applyESP(espEnabled)
+end)
+
+saveBtn.MouseButton1Click:Connect(function()
+    local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+    if root then
+        savedPos = root.CFrame
+        msg.Text = "Base salva!"
+    end
+end)
+
+tpBtn.MouseButton1Click:Connect(function()
+    if savedPos then
+        local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+        if root then
+            root.CFrame = savedPos
+            msg.Text = "Teleportado!"
+        end
+    else
+        msg.Text = "Nenhuma base salva!"
+    end
+end)
+
+fovBtn.MouseButton1Click:Connect(function()
+    fovEnabled = not fovEnabled
+    if fovEnabled then
+        fovBtn.Text = "FOV: 90"
+        fovBtn.BackgroundColor3 = Color3.fromRGB(30,200,140)
+        ativarFOV()
+        msg.Text = "FOV aumentado para 90!"
+    else
+        fovBtn.Text = "FOV: OFF"
+        fovBtn.BackgroundColor3 = Color3.fromRGB(100,90,255)
+        desativarFOV()
+        msg.Text = "FOV restaurado!"
+    end
+end)
+
+satBtn.MouseButton1Click:Connect(function()
+    satEnabled = not satEnabled
+    if satEnabled then
+        satBtn.Text = "Saturação: ON"
+        satBtn.BackgroundColor3 = Color3.fromRGB(100,200,40)
+        ativarSaturacao()
+        msg.Text = "Saturação média ativada!"
+    else
+        satBtn.Text = "Saturação: OFF"
+        satBtn.BackgroundColor3 = Color3.fromRGB(255,143,34)
+        desativarSaturacao()
+        msg.Text = "Saturação restaurada!"
+    end
+end)
+
+optBtn.MouseButton1Click:Connect(function()
+    otimizaEnabled = not otimizaEnabled
+    if otimizaEnabled then
+        optBtn.Text = "Otimizar: ON"
+        optBtn.BackgroundColor3 = Color3.fromRGB(255,209,69)
+        otimizarAtivar()
+        msg.Text = "Otimização padrão Roblox ativada!"
+    else
+        optBtn.Text = "Otimizar: OFF"
+        optBtn.BackgroundColor3 = Color3.fromRGB(0,180,80)
+        otimizarDesativar()
+        msg.Text = "Otimização revertida!"
+    end
+end)
