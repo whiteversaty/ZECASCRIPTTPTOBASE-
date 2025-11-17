@@ -1,0 +1,86 @@
+-- LocalScript (colocar em StarterPlayer > StarterPlayerScripts)
+-- Ativa/desativa um "ESP" simples: destaca jogadores em vermelho e mostra o nome acima da cabeça
+-- Uso: pressione a tecla F para alternar
+
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+
+local localPlayer = Players.LocalPlayer
+local enabled = false
+
+-- tabela para guardar instâncias criadas por jogador
+local active = {} -- key = Player, value = { highlight = Instance, billboard = Instance }
+
+-- cria ESP para um jogador (não cria para o jogador local)
+local function createForPlayer(player)
+	if not player or player == localPlayer then return end
+	if active[player] then return end
+
+	local character = player.Character
+	if not character then
+		-- tenta esperar o character; se não existir, sai
+		player.CharacterAdded:Wait()
+		character = player.Character
+		if not character then return end
+	end
+
+	local head = character:FindFirstChild("Head")
+	if not head then
+		-- se não tiver head, tenta esperar um pouquinho
+		head = character:WaitForChild("Head", 2)
+		if not head then return end
+	end
+
+	-- Highlight (client-side, bom para "ESP" visual sem modificar o servidor)
+	local highlight = Instance.new("Highlight")
+	highlight.Name = "ESP_Highlight"
+	highlight.Adornee = character
+	highlight.FillColor = Color3.fromRGB(255, 0, 0)       -- vermelho
+	highlight.OutlineColor = Color3.fromRGB(120, 0, 0)    -- contorno mais escuro
+	highlight.FillTransparency = 0.35                     -- ajuste conforme goste
+	highlight.OutlineTransparency = 0
+	highlight.Parent = workspace                          -- parent no workspace é ok
+
+	-- BillboardGui para mostrar nome do usuário acima da cabeça
+	local billboard = Instance.new("BillboardGui")
+	billboard.Name = "ESP_Name"
+	billboard.Adornee = head
+	billboard.AlwaysOnTop = true
+	billboard.Size = UDim2.new(0, 120, 0, 30)
+	billboard.StudsOffset = Vector3.new(0, 2.6, 0) -- posição acima da cabeça
+	billboard.Parent = head
+
+	local label = Instance.new("TextLabel")
+	label.Name = "ESP_Label"
+	label.Size = UDim2.new(1, 0, 1, 0)
+	label.BackgroundTransparency = 1
+	label.Text = player.Name
+	label.TextColor3 = Color3.fromRGB(255, 255, 255)
+	label.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+	label.TextStrokeTransparency = 0
+	label.Font = Enum.Font.SourceSansBold
+	label.TextScaled = true
+	label.Parent = billboard
+
+	active[player] = {
+		highlight = highlight,
+		billboard = billboard
+	}
+end
+
+-- remove ESP de um jogador
+local function removeForPlayer(player)
+	local data = active[player]
+	if not data then return end
+	if data.highlight and data.highlight.Parent then
+		data.highlight:Destroy()
+	end
+	if data.billboard and data.billboard.Parent then
+		data.billboard:Destroy()
+	end
+	active[player] = nil
+end
+
+-- ativa ESP para todos os jogadores atuais (exceto local)
+local function enableAll()
+	for
